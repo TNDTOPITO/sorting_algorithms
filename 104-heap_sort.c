@@ -1,84 +1,139 @@
 #include "sort.h"
 #include <stdio.h>
 /**
- * swap_nums - swaps numbers
+ * print_bitonic - prints the array modified by
+ * bitonic algorithm
  *
  * @arr: input array
- * @a: first index
- * @b: second index
+ * @i: first index
+ * @limit: last index
  * Return: no return
  */
-void swap_nums(int *arr, int a, int b)
+void print_bitonic(int *arr, int i, int limit)
 {
-	arr[a] = arr[a] + arr[b];
-	arr[b] = arr[a] - arr[b];
-	arr[a] = arr[a] - arr[b];
+	char *sep;
+
+	for (sep = ""; i < limit; i++)
+	{
+		printf("%s%d", sep, arr[i]);
+		sep = ", ";
+	}
+	printf("\n");
 }
 
 /**
- * recursion_heap - recursion that builds the max heap tree
+ * sort_up - sorts the array in UP mode
  *
  * @arr: input array
- * @i: index number
- * @size: size of the array
- * @limit: limit of the array
+ * @low: first index
+ * @high: last index
  * Return: no return
  */
-void recursion_heap(int *arr, int i, size_t size, int limit)
+void sort_up(int *arr, int low, int high)
 {
-	int bigger;
-	int i2;
+	int i, j, max;
 
-	i2 = i * 2;
-
-	if (i2 + 2 < limit)
+	for (i = low; i < high; i++)
 	{
-		recursion_heap(arr, i2 + 1, size, limit);
-		recursion_heap(arr, i2 + 2, size, limit);
-	}
+		max = i;
 
-	if (i2 + 1 >= limit)
+		for (j = i + 1; j < high; j++)
+		{
+			if (arr[max] > arr[j])
+				max = j;
+		}
+
+		if (max != i)
+		{
+			arr[i] = arr[i] + arr[max];
+			arr[max] = arr[i] - arr[max];
+			arr[i] = arr[i] - arr[max];
+		}
+	}
+}
+
+/**
+ * sort_down - sorts the array in DOWN mode
+ *
+ * @arr: input array
+ * @low: first index
+ * @high: last index
+ * Return: no return
+ */
+void sort_down(int *arr, int low, int high)
+{
+	int i, j, max;
+
+	for (i = low; i < high; i++)
+	{
+		max = i;
+
+		for (j = i + 1; j < high; j++)
+		{
+			if (arr[max] < arr[j])
+				max = j;
+		}
+
+		if (max != i)
+		{
+			arr[i] = arr[i] + arr[max];
+			arr[max] = arr[i] - arr[max];
+			arr[i] = arr[i] - arr[max];
+		}
+	}
+}
+
+/**
+ * recursion - recursive function that executes the bitonic sort
+ * algorithm
+ *
+ * @arr: input array
+ * @low: first index
+ * @high: last index
+ * @bool: UP or DOWN
+ * @size: size of the array
+ * Return: no return
+ */
+void recursion(int *arr, int low, int high, int bool, size_t size)
+{
+	char *option;
+
+	if (high - low < 2)
 		return;
 
-	if (i2 + 2 < limit)
-		bigger = (arr[i2 + 1] > arr[i2 + 2]) ? (i2 + 1) : (i2 + 2);
-	else
-		bigger = i2 + 1;
+	option = (bool == 0) ? "UP" : "DOWN";
+	printf("Merging [%d/%ld] (%s):\n", high - low, size, option);
+	print_bitonic(arr, low, high);
 
-	if (arr[i] < arr[bigger])
-	{
-		swap_nums(arr, i, bigger);
-		print_array(arr, size);
-		recursion_heap(arr, bigger, size, limit);
-	}
+	if (high - low == 2)
+		return;
+
+	recursion(arr, low, (high + low) / 2, 0, size);
+	sort_up(arr, low, (high + low) / 2);
+	printf("Result [%d/%ld] (%s):\n", ((high + low) / 2) - low, size, "UP");
+	print_bitonic(arr, low, (high + low) / 2);
+
+	recursion(arr, (high + low) / 2, high, 1, size);
+	sort_down(arr, (high + low) / 2, high);
+	printf("Result [%d/%ld] (%s):\n", high - ((high + low) / 2), size, "DOWN");
+	print_bitonic(arr, (high + low) / 2, high);
 }
 
 /**
- * heap_sort - sorts an array of integers in ascending
- * order using the Heap sort algorithm
+ * bitonic_sort - first function that executes the bitonic_sort
+ * algorithm
  *
  * @array: input array
  * @size: size of the array
+ * Return: no return
  */
-void heap_sort(int *array, size_t size)
+void bitonic_sort(int *array, size_t size)
 {
-	int i;
-	size_t limit;
-
-	if (!array || size == 0)
+	if (!array || size < 2)
 		return;
 
-	i = 0;
-	limit = size;
-
-	while (limit > 1)
-	{
-		recursion_heap(array, i, size, limit);
-		if (array[i] >= array[limit - 1])
-		{
-			swap_nums(array, i, limit - 1);
-			print_array(array, size);
-		}
-		limit--;
-	}
+	recursion(array, 0, size, 0, size);
+	sort_up(array, 0, size);
+	printf("Result [%ld/%ld] (%s):\n", size, size, "UP");
+	print_bitonic(array, 0, size);
 }
